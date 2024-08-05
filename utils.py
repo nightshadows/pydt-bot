@@ -2,7 +2,10 @@
 d20potz specific utilities
 """
 
+import json
 import logging
+import random
+import string
 from shared import setup_logging
 
 
@@ -14,7 +17,7 @@ def get_client_help_message() -> str:
     Returns the help message for the client
     Telegram commands blob:
 
-    register - <token> - Register a token to receive notifications
+    register - Register to receive notifications and get a token for PYDT webhook
     deregister - Deregister your token
     help - Show help message
     privacy - Show the privacy disclaimer
@@ -22,7 +25,7 @@ def get_client_help_message() -> str:
     help_text = """
 What can this bot do?
 
-1. /register <token> - Register a token to receive notifications
+1. /register - Register to receive notifications and get a token for PYDT webhook
 2. /deregsiter - Deregister your token
 3. /help - Show help message
 4. /privacy - Show the privacy disclaimer
@@ -37,9 +40,22 @@ def get_client_privacy_message() -> str:
     Returns the privacy message for the client
     """
     privacy_text = """
-This bot does not store any personal data.
-It only stores the token you provide to receive notifications.
-The token is never shared with anyone.
-You can permanently delete the token by using the /deregister command.
+This bot does not store or process any personal data.
 """
     return privacy_text
+
+def get_pydt_notification_message(body: json) -> str:
+    """
+    Forms a pretty notification message for the client
+    """
+    notification_text = f"""
+Dear {body['userName']}, it's your damn turn to play in the game {body['gameName']}!
+(round {body['round']})
+"""
+    return notification_text
+
+def generate_token() -> str:
+    """
+    Generates a random token
+    """
+    return "".join(random.choices(string.ascii_letters + string.digits, k=16))
