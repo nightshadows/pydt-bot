@@ -15,6 +15,7 @@ from utils import generate_token
 
 logger = setup_logging(logging.INFO, __name__)
 PYDT_TABLE = "pydt"
+EMPTY_TOKEN = "NONE"
 dynamobd = boto3.resource("dynamodb")
 pydttable = dynamobd.Table(PYDT_TABLE)
 
@@ -29,7 +30,7 @@ class PydtData:
     def __init__(self, update = None):
         self.user_id = 0
         self.chat_id = update.effective_chat.id
-        self.token = ""
+        self.token = EMPTY_TOKEN
         self.params = []
         self.last_calls = []
 
@@ -75,7 +76,7 @@ class PydtData:
             item = response.get("Item")
             if item:
                 token = item.get("pydt_token")
-                self.token = token if token else ""
+                self.token = token if token else EMPTY_TOKEN
                 chat_id = item.get("chat_id")
                 self.chat_id = chat_id if chat_id else ""
         except ClientError:
@@ -86,6 +87,9 @@ class PydtData:
         """
         Fetch the chat id from the database
         """
+        if token == EMPTY_TOKEN:
+            return None
+
         try:
             response = pydttable.query(
                 IndexName="pydt_token-index",
@@ -106,10 +110,14 @@ class PydtData:
         """
         Register the user
         """
-        if self.token == "":
+        if self.token in (EMPTY_TOKEN, ""):
             token = generate_token()
             self.token = token
         self.save()
+        if self.token == EMPTY_TOKEN:
+            logger.error("Failed to register user %s", self.user_id)
+            return "Failed to register. Please try again later."
+
         webhook_url = os.getenv("WEBHOOK_TEMPLATE") + self.token
         reply_text = f"""
 You have been registered in the bot.
@@ -124,6 +132,6 @@ To stop recieving notifications, use the /deregister command.
         """
         Deregister the user
         """
-        self.token = ""
+        self.token = EMPTY_TOKEN
         self.save()
         return "You have been deregistered. You will no longer recieve any notifications. Remember to also remove the webhook from your PYDT website profile."
