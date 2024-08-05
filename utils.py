@@ -26,7 +26,7 @@ def get_client_help_message() -> str:
 What can this bot do?
 
 1. /register - Register to receive notifications and get a token for PYDT webhook
-2. /deregsiter - Deregister your token
+2. /deregister - Deregister your token
 3. /help - Show help message
 4. /privacy - Show the privacy disclaimer
 
